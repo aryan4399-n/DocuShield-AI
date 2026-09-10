@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const controller = require('../controllers/admin.controller');
+const { requireAdmin } = require('../middleware/admin.middleware');
+router.use(requireAdmin);
+router.get('/applications', controller.list);
+router.get('/applications/:applicationId', controller.details);
+router.get('/applications/:applicationId/documents/:documentId/file', controller.file);
+router.post('/applications/:applicationId/review', controller.review);
+router.get('/audit-logs', controller.auditLogs);
+module.exports = router;

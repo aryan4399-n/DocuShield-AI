@@ -1,0 +1,17 @@
+const express = require('express');
+const path = require('path');
+const env = require('./config/env');
+require('./config/database');
+const { configureSecurity } = require('./middleware/security.middleware');
+const { errorHandler } = require('./middleware/error.middleware');
+const routes = require('./routes');
+const logger = require('./utils/logger');
+
+const app = express();
+configureSecurity(app);
+app.use('/api', routes);
+app.use(express.static(env.clientDir));
+app.get('/', (req, res) => res.sendFile(path.join(env.clientDir, 'index.html')));
+app.use(errorHandler);
+app.listen(env.port, () => logger.info(`DocuShieldAI running at http://localhost:${env.port}`));
+module.exports = app;

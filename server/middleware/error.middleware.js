@@ -1,0 +1,5 @@
+const multer = require('multer');
+const { sendError } = require('../utils/response');
+const { removeFiles } = require('../services/file-storage.service');
+function errorHandler(error, req, res, next) { if (req.files) removeFiles(req.files); if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') return sendError(res, 'FILE_TOO_LARGE', 'Each file must be within the configured size limit.', 413); if (error.code && error.status) return sendError(res, error.code, error.message, error.status); if (error instanceof multer.MulterError || error.message === 'Unexpected field') return sendError(res, 'INVALID_UPLOAD', 'Invalid upload request.', 400); console.error(error); return sendError(res, 'SERVER_ERROR', 'The server could not complete the request.', 500); }
+module.exports = { errorHandler };

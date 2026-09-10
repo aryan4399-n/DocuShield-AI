@@ -1,0 +1,8 @@
+.env
+node_modules/
+uploads/
+server/uploads/
+client/assets/models/*.bin
+*.log
+data/*.sqlite
+server/database/*.sqlite

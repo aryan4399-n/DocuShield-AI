@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Applicant details | DocuShieldAI</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="page-shell">
+  <div id="app-shell"></div>
+  <main class="wrap app-main">
+    <div class="app-kicker mono">01 / APPLICANT CONTEXT</div>
+    <h1 class="app-title">Start with the<br>right context.</h1>
+    <p class="app-subtitle">Tell us who is submitting this application. Your details stay with the application record and keep the document review traceable.</p>
+    <div class="stepper"><span class="active">01 &nbsp; Applicant</span><span>02 &nbsp; Documents</span><span>03 &nbsp; Verification</span><span>04 &nbsp; Result</span></div>
+    <form id="applicant-form" class="glass-card form-card">
+      <div class="form-grid">
+        <div class="field"><label for="firstName">First name *</label><input id="firstName" name="firstName" required autocomplete="given-name" placeholder="Aarav"></div>
+        <div class="field"><label for="lastName">Last name *</label><input id="lastName" name="lastName" required autocomplete="family-name" placeholder="Sharma"></div>
+        <div class="field"><label for="email">Email address *</label><input id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label for="mobile">Mobile number</label><input id="mobile" name="mobile" autocomplete="tel" placeholder="+91 98••••••••"></div>
+        <div class="field"><label for="dob">Date of birth</label><input id="dob" name="dob" type="date"></div>
+        <div class="field"><label for="country">Country</label><input id="country" name="country" value="India" autocomplete="country-name"></div>
+        <div class="field full"><label for="purpose">Verification purpose</label><select id="purpose" name="purpose"><option>Identity and document verification</option><option>Applicant onboarding</option><option>Service access</option><option>Other</option></select></div>
+        <div class="field full"><label><input id="consent" type="checkbox" required> I consent to processing these details for this verification application.</label></div>
+      </div>
+      <div id="form-error" class="error-note" role="alert"></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Continue to documents <span>↗</span></button></div>
+    </form>
+  </main>
+  <script src="/js/site.js"></script>
+  <script>
+    document.getElementById("app-shell").innerHTML = DocuShield.appShell();
+    document.getElementById("applicant-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      const data = Object.fromEntries(new FormData(form));
+      data.consent = true;
+      localStorage.setItem("verifyflowApplicant", JSON.stringify(data));
+      localStorage.setItem("verifyflowApplicantComplete", "true");
+      window.location.href = "documents.html";
+    });
+  </script>
+</body>
+</html>
