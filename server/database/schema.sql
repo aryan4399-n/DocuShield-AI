@@ -41,3 +41,32 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   details TEXT,
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS document_analyses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  document_id INTEGER NOT NULL UNIQUE REFERENCES documents(id) ON DELETE CASCADE,
+  ocr_text TEXT,
+  extracted_fields_json TEXT NOT NULL,
+  ocr_confidence REAL,
+  quality_json TEXT NOT NULL,
+  tamper_json TEXT NOT NULL,
+  processed_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS verification_checks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  check_name TEXT NOT NULL,
+  passed INTEGER NOT NULL,
+  details TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS risk_assessments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  application_id INTEGER NOT NULL UNIQUE REFERENCES applications(id) ON DELETE CASCADE,
+  score INTEGER,
+  level TEXT NOT NULL,
+  factors_json TEXT NOT NULL,
+  consistency_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_documents_hash ON documents(sha256);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_application ON audit_logs(application_id);

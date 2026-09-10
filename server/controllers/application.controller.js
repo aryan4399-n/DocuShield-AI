@@ -1,7 +1,10 @@
 const service = require('../services/application.service');
 const { sendSuccess, sendError } = require('../utils/response');
+const reportService = require('../services/report.service');
 function publicApplication(row) { const model = require('../models/application.model'); return model.publicView(row); }
 function publicDocuments(row) { const model = require('../models/document.model'); return service.documents(row).map(item => model.publicView(item, service.labels)); }
+function publicAnalysis(row) { const analysis = service.analysis(row); return { risk: analysis.risk, documents: analysis.documents.map(item => ({ documentId: item.document_id, type: item.type, ocrConfidence: item.ocr_confidence, fields: JSON.parse(item.extracted_fields_json), quality: JSON.parse(item.quality_json), tamper: JSON.parse(item.tamper_json) })) }; }
 async function submit(req, res, next) { try { const applicant = JSON.parse(req.body.applicant || 'null'); if (!applicant || typeof applicant !== 'object') return sendError(res, 'INVALID_APPLICANT', 'Applicant information is required.'); const row = await service.submit(applicant, req.files || []); return sendSuccess(res, { application: publicApplication(row), documents: publicDocuments(row) }, 'Application submitted successfully', 201); } catch (error) { next(error); } }
-function get(req, res) { const row = service.find(req.params.applicationId); if (!row) return sendError(res, 'NOT_FOUND', 'Application not found.', 404); return sendSuccess(res, { application: publicApplication(row), documents: publicDocuments(row) }); }
-module.exports = { submit, get };
+function get(req, res) { const row = service.find(req.params.applicationId); if (!row) return sendError(res, 'NOT_FOUND', 'Application not found.', 404); return sendSuccess(res, { application: publicApplication(row), documents: publicDocuments(row), analysis: publicAnalysis(row) }); }
+function report(req, res) { const row = service.find(req.params.applicationId); if (!row) return sendError(res, 'NOT_FOUND', 'Application not found.', 404); res.type('pdf').attachment(`${row.application_id}-report.pdf`); if (!reportService.createReport(req.params.applicationId, res)) return sendError(res, 'REPORT_FAILED', 'Report could not be generated.', 500); }
+module.exports = { submit, get, report };
