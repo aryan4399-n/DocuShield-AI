@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: docushieldai-sih26188
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "false"
+      - key: MAX_FILE_MB
+        value: "10"
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://docushieldai-sih26188.onrender.com
+      - key: DATA_DIR
+        value: /opt/render/project/src/storage/database
+      - key: UPLOAD_DIR
+        value: /opt/render/project/src/storage/uploads
+      - key: VERIFICATION_API_URL
+        sync: false
+      - key: VERIFICATION_API_KEY
+        sync: false
+    disk:
+      name: docushieldai-storage
+      mountPath: /opt/render/project/src/storage
+      sizeGB: 1

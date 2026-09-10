@@ -23,6 +23,19 @@ npm run dev
 
 Open [http://localhost:3000/](http://localhost:3000/) for the SIH26188 product landing page. Start the applicant flow from there; it continues to `applicant.html`, `documents.html`, and `verification.html`.
 
+## Publish publicly with Render
+
+This project includes [render.yaml](render.yaml). GitHub Pages cannot run the Express API, SQLite database, OCR worker, or protected document endpoints, so deploy the full service to Render:
+
+1. Push this repository to GitHub.
+2. In Render, choose **New > Blueprint** and select `aryan4399-n/DocuShield-AI`.
+3. Confirm the `render.yaml` blueprint and create the service.
+4. Render generates `ADMIN_TOKEN` automatically and provisions a persistent disk for SQLite and private uploads.
+5. Add `VERIFICATION_API_URL` and `VERIFICATION_API_KEY` in the Render environment settings only when an authorized provider is ready.
+6. Open the generated `https://docushieldai-sih26188.onrender.com/` URL.
+
+The deployed health check is `https://docushieldai-sih26188.onrender.com/api/health`. The exact hostname may differ if Render changes the service name; use the URL shown in the Render dashboard. Do not use the local `.env` token in a public deployment.
+
 Set a long random `ADMIN_TOKEN` in `.env`. The admin page asks for this token in the browser and keeps it only in the current session. The development fallback token in the checked-out `.env` must be replaced before use beyond local testing.
 
 ## Verification provider

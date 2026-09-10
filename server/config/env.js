@@ -11,6 +11,6 @@ module.exports = {
   demoMode: String(process.env.DEMO_MODE).toLowerCase() === 'true',
   rootDir: path.resolve(__dirname, '../..'),
   clientDir: path.resolve(__dirname, '../../client'),
-  dataDir: path.resolve(__dirname, '../database'),
-  uploadDir: path.resolve(__dirname, '../uploads')
+  dataDir: path.resolve(process.env.DATA_DIR || path.resolve(__dirname, '../database')),
+  uploadDir: path.resolve(process.env.UPLOAD_DIR || path.resolve(__dirname, '../uploads'))
 };
