@@ -6,6 +6,7 @@ const { configureSecurity } = require('./middleware/security.middleware');
 const { errorHandler } = require('./middleware/error.middleware');
 const routes = require('./routes');
 const logger = require('./utils/logger');
+const { shutdown: shutdownOcr } = require('./services/ocr.service');
 
 const app = express();
 configureSecurity(app);
@@ -14,4 +15,6 @@ app.use(express.static(env.clientDir));
 app.get('/', (req, res) => res.sendFile(path.join(env.clientDir, 'index.html')));
 app.use(errorHandler);
 app.listen(env.port, () => logger.info(`DocuShieldAI running at http://localhost:${env.port}`));
+process.once('SIGINT', async () => { await shutdownOcr(); process.exit(0); });
+process.once('SIGTERM', async () => { await shutdownOcr(); process.exit(0); });
 module.exports = app;

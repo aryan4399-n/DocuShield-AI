@@ -16,5 +16,10 @@ Uploads are written to `server/uploads/` with random filenames. That directory i
 - `server/services/`: application workflow and provider orchestration.
 - `server/models/`: SQLite queries.
 - `server/providers/`: replaceable verification integrations.
+- `server/services/ocr.service.js`: Tesseract.js image OCR with one reusable worker per server process; raw OCR text is not persisted.
 - `server/middleware/`: security, uploads, authorization, and errors.
 - `tests/`: API, service, security, and frontend test homes.
+
+## OCR boundary
+
+Tesseract.js extracts readable text from JPEG, PNG, and WEBP files. It does not establish authenticity or identity, and it does not process PDF files directly. The verification service records OCR availability and text length in verification checks, but only an authorized verification provider may produce an authenticity result. A provider `verified` response is changed to `manual_review` when image OCR cannot confirm readable text.

@@ -11,6 +11,7 @@ The root is intentionally split into `client/`, `server/`, `tests/`, and `docs/`
 - Node.js 18 or newer
 - npm
 - An authorized verification-provider account for automated authenticity checks
+- Tesseract.js OCR is included for image text extraction; PDF OCR requires a separate PDF-to-image pipeline.
 
 ## Install and run
 
@@ -29,6 +30,10 @@ Set a long random `ADMIN_TOKEN` in `.env`. The admin page asks for this token in
 Set `VERIFICATION_API_URL` and `VERIFICATION_API_KEY` in `.env` only. The key is read by `services/verificationService.js` and is never sent to frontend JavaScript. The adapter sends a multipart POST containing `file`, `documentType`, and `documentId`. Because providers use different contracts, adapt that module to the authorized provider's documented endpoint and response mapping. The app never invents a successful result: without a configured provider, every document is `manual_review`.
 
 The adapter expects a response that can be mapped to `status` (`verified`, `failed`, or `manual_review`), optional `score`, optional `checks`, and `message`. Keep provider-specific authentication and fields inside the service module.
+
+## OCR
+
+Tesseract.js is installed with the backend and runs in `server/services/ocr.service.js`. It reuses one worker for image documents and terminates only when the server process is shut down. OCR output is not stored because document text may contain sensitive personal information; only OCR availability, pass state, and text length are recorded in verification checks. OCR is not document authenticity verification.
 
 ## API
 
