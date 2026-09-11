@@ -14,6 +14,47 @@ const requiredTypes = Object.keys(labels);
 function now() { return new Date().toISOString(); }
 function recalculate(row) { const documents = documentModel.listForApplication(row.id); const statuses = documents.map(item => item.status); const status = statuses.includes('failed') ? 'failed' : statuses.every(item => item === 'verified') ? 'verified' : 'manual_review'; const scores = documents.map(item => item.score).filter(item => item !== null); const score = scores.length ? Math.round(scores.reduce((sum, item) => sum + item, 0) / scores.length) : null; const message = status === 'verified' ? 'All documents were verified by the configured provider.' : status === 'failed' ? 'One or more documents failed verification.' : 'One or more documents require manual review.'; applicationModel.updateStatus(row.id, status, score, message, now()); }
 async function submit(applicant, files) { if (!files.length) throw Object.assign(new Error('At least one document is required.'), { code: 'INVALID_DOCUMENT', status: 400 }); const missing = requiredTypes.filter(type => !files.some(file => file.fieldname === type)); if (missing.length) throw Object.assign(new Error(`Missing required documents: ${missing.map(type => labels[type]).join(', ')}`), { code: 'MISSING_DOCUMENT', status: 400 }); for (const file of files) { if (!file.size || !hasExpectedSignature(file)) throw Object.assign(new Error(`Invalid file: ${file.originalname}`), { code: 'INVALID_DOCUMENT', status: 400 }); if (file.fieldname === 'photo' && !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) throw Object.assign(new Error('Applicant photograph must be JPG, PNG, or WEBP.'), { code: 'INVALID_PHOTO', status: 400 }); } const hashes = files.map(file => sha256File(file.path)); if (new Set(hashes).size !== hashes.length) throw Object.assign(new Error('Duplicate document detected.'), { code: 'DUPLICATE_DOCUMENT', status: 400 }); const timestamp = now(); let row; try { const applicationId = createApplicationId(db); const transaction = db.transaction(() => { const result = applicationModel.create(applicationId, applicant, timestamp); files.forEach((file, index) => documentModel.create(result.lastInsertRowid, file, hashes[index], timestamp)); return result.lastInsertRowid; }); row = applicationModel.findById(transaction()); const documents = documentModel.listForApplication(row.id); const analyses = []; for (const document of documents) { const file = files.find(item => item.fieldname === document.type && item.filename === document.stored_name); const result = await verifyDocument(file, document); documentModel.updateResult(document.id, result); analyses.push(analysisService.persistDocument(document, result, timestamp)); } analysisService.persistRisk(row.id, analyses, timestamp); recalculate(row); record(row.id, 'application_created', 'system', { documentCount: documents.length }); return applicationModel.findByApplicationId(applicationId); } catch (error) { removeFiles(files); throw error; } }
+async function submit(applicant, files) {
+  if (files.length !== requiredTypes.length || new Set(files.map(file => file.fieldname)).size !== requiredTypes.length) {
+    throw Object.assign(new Error('Submit exactly one file for each required document type.'), { code: 'INVALID_DOCUMENT_SET', status: 400 });
+  }
+  const missing = requiredTypes.filter(type => !files.some(file => file.fieldname === type));
+  if (missing.length) throw Object.assign(new Error(`Missing required documents: ${missing.map(type => labels[type]).join(', ')}`), { code: 'MISSING_DOCUMENT', status: 400 });
+  for (const file of files) {
+    if (!file.size || !hasExpectedSignature(file)) throw Object.assign(new Error(`Invalid file: ${file.originalname}`), { code: 'INVALID_DOCUMENT', status: 400 });
+    if (file.fieldname === 'photo' && !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) throw Object.assign(new Error('Applicant photograph must be JPG, PNG, or WEBP.'), { code: 'INVALID_PHOTO', status: 400 });
+  }
+  const hashes = files.map(file => sha256File(file.path));
+  if (new Set(hashes).size !== hashes.length) throw Object.assign(new Error('Duplicate document detected.'), { code: 'DUPLICATE_DOCUMENT', status: 400 });
+
+  const timestamp = now();
+  let row;
+  try {
+    const applicationId = createApplicationId(db);
+    const create = db.transaction(() => {
+      const result = applicationModel.create(applicationId, applicant, timestamp);
+      files.forEach((file, index) => documentModel.create(result.lastInsertRowid, file, hashes[index], timestamp));
+      return result.lastInsertRowid;
+    });
+    row = applicationModel.findById(create());
+    const documents = documentModel.listForApplication(row.id);
+    const analyses = [];
+    for (const document of documents) {
+      const file = files.find(item => item.fieldname === document.type && item.filename === document.stored_name);
+      const result = await verifyDocument(file, document);
+      documentModel.updateResult(document.id, result);
+      analyses.push(analysisService.persistDocument(document, result, timestamp));
+    }
+    analysisService.persistRisk(row.id, analyses, timestamp);
+    recalculate(row);
+    record(row.id, 'application_created', 'system', { documentCount: documents.length });
+    return applicationModel.findByApplicationId(applicationId);
+  } catch (error) {
+    if (row) db.prepare('DELETE FROM applications WHERE id = ?').run(row.id);
+    removeFiles(files);
+    throw error;
+  }
+}
 function find(applicationId) { return applicationModel.findByApplicationId(applicationId); }
 function documents(row) { return documentModel.listForApplication(row.id); }
 function analysis(row) { return { documents: analysisModel.listForApplication(row.id), risk: analysisModel.parse(analysisModel.getRisk(row.id)) }; }
