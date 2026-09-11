@@ -24,7 +24,7 @@ function initShell() {
 }
 
 function appShell(title = "DocuShieldAI") {
-  return `<header class="app-header"><div class="wrap app-header-row"><a class="brand" href="/"><span class="brand-mark"><svg viewBox="0 0 34 38" fill="none"><path d="M17 1 31 6v10c0 10-5.8 17.7-14 21C8.8 33.7 3 26 3 16V6L17 1Z" stroke="currentColor" stroke-width="2"/><path d="m10 18 4.2 4L24 12" stroke="currentColor" stroke-width="2"/></svg><span>DS</span></span><span class="brand-name">DocuShield<b>AI</b></span></a><div class="mono muted">SIH26188 / SECURE WORKSPACE</div></div></header>`;
+  return `<header class="app-header"><div class="wrap app-header-row"><a class="brand" href="/"><span class="brand-mark"><svg viewBox="0 0 34 38" fill="none"><path d="M17 1 31 6v10c0 10-5.8 17.7-14 21C8.8 33.7 3 26 3 16V6L17 1Z" stroke="currentColor" stroke-width="2"/><path d="m10 18 4.2 4L24 12" stroke="currentColor" stroke-width="2"/></svg><span>DS</span></span><span class="brand-name">DocuShield<b>AI</b></span></a><nav class="app-header-links"><a href="/track.html">Track application</a><a href="/admin.html">Admin workspace</a></nav><div class="mono muted">SIH26188 / SECURE WORKSPACE</div></div></header>`;
 }
 
 window.DocuShield = { API: DOCUSHIELD_API, escapeHTML, statusLabel, statusPill, initShell, appShell };
